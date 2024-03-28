@@ -1,0 +1,33 @@
+name: Close All Issues
+
+on:
+  schedule:
+    - cron: '0 22 * * 1'  # 22 Uhr UTC, entsprich 0 Uhr deutscher Zeit, jeden Montag
+
+jobs:
+  closeIssues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Close open issues
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const issueList = await github.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+            });
+
+            for (const issue of issueList.data) {
+              await github.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed',
+              });
+              console.log(`Issue #${issue.number} closed.`);
+            }
